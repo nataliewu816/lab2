@@ -1,43 +1,62 @@
 `include "src/top.sv"
-`default_nettype none
+`timescale 1ns/1ps         // Set tick to 1ns. Set sim resolution to 1ps.
+
+/**
+ * Note:
+ *  The TB below is only an example of a testbench written in SV.
+ *  Adapt this for your lab assignments as you see fit.
+ *  An example clk signal has been added to show what a signal decl and usage looks like.
+ *     You are welcome to delete the clk signal if it's not needed.
+ *     For instance, purely combinational circuits do not need clks.
+ *     So for labs without sequential elements, you can remove them.
+ */
 
 module top_tb;
-logic clk;
-logic [3:0] data;
-logic [6:0] bcd_data;
 
-top uut (
-    .bcd(data),
-    .seg7(bcd_data)
+/** declare tb signals below */
+logic clk_tb;
+logic [3:0] val1_tb;
+logic [3:0] val2_tb;
+logic [7:0] seg7_tb;
+
+/** declare module(s) below */
+top dut                    // declare an inst of top called "dut" (device under test)
+(
+    /** hook up tb signals to dut signals */
+    .val1(val1_tb),
+    .val2(val2_tb),
+    .seg7(seg7_tb)
 );
 
 localparam CLK_PERIOD = 10;
+always #(CLK_PERIOD/2) clk_tb=~clk_tb;          // toggle clk_tb every #(CLK_PERIOD/2) ticks
 
 initial begin
-    $dumpfile("build/top.vcd");
-    $dumpvars(0, top_tb);
+    $dumpfile("build/top.vcd"); // intermediate file for waveform generation
+    $dumpvars(0, top_tb);       // capture all signals under top_tb
 end
 
 initial begin
-    #(CLK_PERIOD*3);
-    data = 4'h0; #(CLK_PERIOD*3);
-    data = 4'h1; #(CLK_PERIOD*3);
-    data = 4'h2; #(CLK_PERIOD*3);
-    data = 4'h3; #(CLK_PERIOD*3);
-    data = 4'h4; #(CLK_PERIOD*3);
-    data = 4'h5; #(CLK_PERIOD*3);
-    data = 4'h6; #(CLK_PERIOD*3);
-    data = 4'h7; #(CLK_PERIOD*3);
-    data = 4'h8; #(CLK_PERIOD*3);
-    data = 4'h9; #(CLK_PERIOD*3);
-    data = 4'hA; #(CLK_PERIOD*3);
-    data = 4'hB; #(CLK_PERIOD*3);
-    data = 4'hC; #(CLK_PERIOD*3);
-    data = 4'hD; #(CLK_PERIOD*3);
-    data = 4'hE; #(CLK_PERIOD*3);
-    data = 4'hF; #(CLK_PERIOD*3);
-    $finish;
+    /** testbench logic goes below */
+    clk_tb <= 1'b1;
+    #(CLK_PERIOD*3);    // waits for CLK_PERIOD * 3 ticks
+
+    // 0 + 0 = 0
+    val1_tb = 4'd0;  val2_tb = 4'd0;  #(CLK_PERIOD*3);
+    // 1 + 1 = 2
+    val1_tb = 4'd1;  val2_tb = 4'd1;  #(CLK_PERIOD*3);
+    // 3 + 4 = 7
+    val1_tb = 4'd3;  val2_tb = 4'd4;  #(CLK_PERIOD*3);
+    // 5 + 5 = A
+    val1_tb = 4'd5;  val2_tb = 4'd5;  #(CLK_PERIOD*3);
+    // 9 + 6 = F
+    val1_tb = 4'd9;  val2_tb = 4'd6;  #(CLK_PERIOD*3);
+    // 8 + 8 = 16 (overflow!)
+    val1_tb = 4'd8;  val2_tb = 4'd8;  #(CLK_PERIOD*3);
+    // 15 + 15 = 30 (overflow!)
+    val1_tb = 4'd15; val2_tb = 4'd15; #(CLK_PERIOD*3);
+    
+    $finish;            // end simulation, otherwise it runs indefinitely
 end
 
 endmodule
-`default_nettype wire
